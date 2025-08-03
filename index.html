@@ -3,14 +3,171 @@
     <head>
         <meta charset="utf-8">
         <title>BotPedia</title>
+        <style>
+            body {
+                font-family: 'Arial', sans-serif;
+                background-color: #f0f2f5;
+                color: #333;
+                margin: 0;
+                padding: 20px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            .container {
+                max-width: 600px;
+                padding: 40px;
+                background-color: #fff;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                border-radius: 8px;
+            }
+            h1 {
+                color: #007bff;
+                margin-bottom: 10px;
+            }
+            p {
+                margin-top: 0;
+                color: #666;
+            }
+            #search {
+                width: 80%;
+                padding: 12px 20px;
+                margin: 20px 0;
+                border: 2px solid #ccc;
+                border-radius: 25px;
+                font-size: 16px;
+                outline: none;
+                transition: border-color 0.3s;
+            }
+            #search:focus {
+                border-color: #007bff;
+            }
+            #results {
+                list-style: none;
+                padding: 0;
+                text-align: left;
+                width: 100%;
+            }
+            #results li {
+                background-color: #e9ecef;
+                margin-top: 10px;
+                padding: 15px;
+                border-radius: 8px;
+                border-left: 5px solid #007bff;
+            }
+            #results li a {
+                text-decoration: none;
+                color: #007bff;
+                font-weight: bold;
+                display: block;
+            }
+            #results li p {
+                color: #555;
+                margin-top: 5px;
+                font-size: 14px;
+            }
+            h4 {
+                color: #888;
+                margin-top: 40px;
+                font-weight: normal;
+            }
+        </style>
     </head>
     <body>
+        <div class="container">
+            <h1>BotPedia</h1>
+            <p>An online dictionary and encyclopedia made by Praterich AI.</p>
+            <br>
+            <input type="text" id="search" name="search" placeholder="Search BotPedia...">
+            <ul id="results"></ul>
+            <br>
+            <h4>Copyright Stenoip Company</h4>
+        </div>
 
-      <h1>BotPedia</h1>
-<p>An online dictionary and encyclopedia made by Praterich AI.</p>
-      <br>
-       <input type="text" id="search" name="search" placeholder="Search"><br><br>
+        <script src="https://unpkg.com/lunr/lunr.js"></script>
+        <script>
+            // Data to be indexed. In a real scenario, this would be fetched from stenoip.github.io/botpedia
+            // Here, we use a placeholder to simulate the data.
+            const botpediaData = [
+                {
+                    "id": "botpedia-page-1",
+                    "title": "BotPedia Home",
+                    "content": "This is the homepage of BotPedia, an encyclopedia for bots.",
+                    "url": "https://stenoip.github.io/botpedia"
+                },
+                {
+                    "id": "what-is-a-bot",
+                    "title": "What is a Bot?",
+                    "content": "A bot is an automated program that performs tasks on the internet. They can be used for various purposes like customer service or data scraping.",
+                    "url": "https://stenoip.github.io/botpedia/what-is-a-bot"
+                },
+                {
+                    "id": "praterich-ai",
+                    "title": "Praterich AI",
+                    "content": "Praterich AI is an artificial intelligence company that created BotPedia.",
+                    "url": "https://stenoip.github.io/botpedia/praterich-ai"
+                },
+                {
+                    "id": "stenoip-company",
+                    "title": "Stenoip Company",
+                    "content": "Stenoip is the parent company of BotPedia.",
+                    "url": "https://stenoip.github.io/botpedia/stenoip-company"
+                }
+            ];
 
-      <h4>Copyright Stenoip Company</h4>
+            // Initialize Lunr index
+            const idx = lunr(function () {
+                this.ref('id');
+                this.field('title', { boost: 10 });
+                this.field('content');
+                this.metadataWhitelist = ['position'];
+
+                botpediaData.forEach(function (doc) {
+                    this.add(doc);
+                }, this);
+            });
+
+            // Get search input and results list
+            const searchInput = document.getElementById('search');
+            const resultsList = document.getElementById('results');
+
+            // Listen for input events on the search bar
+            searchInput.addEventListener('input', function() {
+                const query = searchInput.value;
+                resultsList.innerHTML = ''; // Clear previous results
+
+                if (query.trim() === '') {
+                    return; // Don't show results for an empty query
+                }
+
+                try {
+                    const searchResults = idx.search(query);
+                    if (searchResults.length > 0) {
+                        searchResults.forEach(result => {
+                            const resultData = botpediaData.find(item => item.id === result.ref);
+                            const li = document.createElement('li');
+                            const a = document.createElement('a');
+                            const p = document.createElement('p');
+
+                            a.href = resultData.url;
+                            a.textContent = resultData.title;
+                            p.textContent = resultData.content.substring(0, 150) + '...'; // Show a snippet
+
+                            li.appendChild(a);
+                            li.appendChild(p);
+                            resultsList.appendChild(li);
+                        });
+                    } else {
+                        const li = document.createElement('li');
+                        li.textContent = 'No results found.';
+                        resultsList.appendChild(li);
+                    }
+                } catch (e) {
+                    // Handle query parsing errors
+                    resultsList.innerHTML = '<li>Invalid search query.</li>';
+                }
+            });
+        </script>
     </body>
 </html>
